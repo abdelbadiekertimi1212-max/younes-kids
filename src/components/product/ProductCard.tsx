@@ -30,7 +30,7 @@ export function ProductCard({
 
   return (
     <Link href={href} className="group block">
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-brand-light">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[1.25rem] bg-brand-light shadow-[var(--shadow-soft)]">
         {img && (
           <Image
             src={img}
@@ -45,13 +45,18 @@ export function ProductCard({
         )}
 
         <div className="absolute start-2 top-2 flex flex-col gap-1">
+          {product.is_new && (
+            <span className="rounded-full bg-mint px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+              {dict.product.newArrival}
+            </span>
+          )}
           {product.is_best_seller && (
-            <span className="rounded-full bg-gold px-2 py-0.5 text-[11px] font-semibold text-white">
+            <span className="rounded-full bg-brand px-2.5 py-0.5 text-[11px] font-bold text-ink shadow-sm">
               {dict.product.bestSeller}
             </span>
           )}
           {hasDiscount && (
-            <span className="rounded-full bg-ink px-2 py-0.5 text-[11px] font-semibold text-white">
+            <span className="rounded-full bg-candy px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
               -{off}%
             </span>
           )}
@@ -75,7 +80,7 @@ export function ProductCard({
         )}
       </div>
 
-      <h3 className="mt-2 line-clamp-1 text-sm font-medium text-ink">{name}</h3>
+      <h3 className="mt-2.5 line-clamp-1 text-sm font-bold text-ink">{name}</h3>
       <div className="mt-0.5 flex items-center gap-2">
         <span className="text-sm font-bold text-ink">
           {formatPrice(product.price)} {dict.common.currency}

@@ -139,6 +139,7 @@ export const productInputSchema = z
     cost_price: money.nullable().optional(),
     vendor: nullableStr(80),
     product_type: nullableStr(80),
+    gender: z.enum(["girls", "boys", "unisex"]).nullable().optional(),
     tags: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
     weight_grams: z.number().int().min(0).max(100000).nullable().optional(),
     internal_notes: nullableStr(2000),

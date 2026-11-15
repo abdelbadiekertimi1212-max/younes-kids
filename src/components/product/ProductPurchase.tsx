@@ -13,6 +13,7 @@ import { resolveVariant, sizeAvailable } from "@/lib/variants";
 import { trackAddToCart } from "@/lib/pixel";
 import { cn, formatPrice, interpolate } from "@/lib/utils";
 import { WishlistButton } from "./WishlistButton";
+import { sizeLabel, sortSizes } from "@/lib/kids";
 
 const LOW = 5;
 
@@ -42,7 +43,7 @@ export function ProductPurchase({
   const active = useMemo(() => variants.filter((v) => v.is_active), [variants]);
 
   const sizes = useMemo(
-    () => [...new Set(active.map((v) => v.size).filter((s): s is string => !!s))],
+    () => sortSizes(active.map((v) => v.size).filter((s): s is string => !!s)),
     [active],
   );
   const colors = useMemo(() => {
@@ -124,14 +125,15 @@ export function ProductPurchase({
                   }}
                   aria-pressed={size === s}
                   className={cn(
-                    "min-w-11 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                    "min-w-11 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors",
                     size === s
-                      ? "border-brand-dark bg-brand-dark text-white"
+                      ? "border-ink bg-ink text-white"
                       : "border-line bg-white text-ink hover:border-brand-dark",
                     !avail && "line-through opacity-40",
                   )}
+                  title={s}
                 >
-                  {s}
+                  {sizeLabel(s, lang)}
                 </button>
               );
             })}

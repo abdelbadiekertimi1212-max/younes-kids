@@ -14,6 +14,7 @@ import { resolveVariant, sizeAvailable } from "@/lib/variants";
 import { PHONE_RE } from "@/lib/validation";
 import { trackInitiateCheckout } from "@/lib/pixel";
 import { cn, formatPrice } from "@/lib/utils";
+import { sizeLabel, sortSizes } from "@/lib/kids";
 
 export type LandingTexts = {
   size: string;
@@ -69,7 +70,7 @@ export function LandingOrderForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const active = useMemo(() => variants.filter((v) => v.is_active), [variants]);
-  const sizes = useMemo(() => [...new Set(active.map((v) => v.size).filter((s): s is string => !!s))], [active]);
+  const sizes = useMemo(() => sortSizes(active.map((v) => v.size).filter((s): s is string => !!s)), [active]);
   const colors = useMemo(() => {
     const m = new Map<string, string | null>();
     active.forEach((v) => v.color && m.set(v.color, v.color_hex ?? null));
@@ -269,8 +270,9 @@ export function LandingOrderForm({
                   !sizeAvailable(active, s, color) && "line-through opacity-40",
                 )}
                 style={size === s ? { backgroundColor: form.accentColor, borderColor: form.accentColor } : undefined}
+                title={s}
               >
-                {s}
+                {sizeLabel(s, lang)}
               </button>
             ))}
           </div>

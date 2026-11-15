@@ -168,7 +168,7 @@ export const storeText: Record<Locale, StoreText> = {
       added: "تمت الإضافة إلى السلة",
       viewCart: "عرض السلة",
       buyNow: "اطلبه الآن",
-      unavailable: "هذا المنتج لم يعد متوفراً — احذفيه من السلة للمتابعة.",
+      unavailable: "هذا المنتج لم يعد متوفراً — احذفه من السلة للمتابعة.",
       onlyAvailable: "متوفر {count} فقط",
       freeShippingProgress: "أضف {amount} للحصول على توصيل مجاني",
       freeShippingReached: "🎉 طلبك مؤهّل للتوصيل المجاني",

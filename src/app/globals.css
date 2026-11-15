@@ -93,3 +93,45 @@ body {
     animation: none;
   }
 }
+
+/* Kids decorations: gentle floating clouds and twinkling stars. */
+@keyframes yk-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes yk-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) rotate(12deg);
+    opacity: 0.75;
+  }
+}
+.animate-float {
+  animation: yk-float 6s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: yk-float 9s ease-in-out infinite;
+}
+.animate-twinkle {
+  animation: yk-twinkle 2.8s ease-in-out infinite;
+}
+.animate-twinkle-slow {
+  animation: yk-twinkle 4.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-slow,
+  .animate-twinkle,
+  .animate-twinkle-slow {
+    animation: none;
+  }
+}

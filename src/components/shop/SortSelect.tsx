@@ -4,16 +4,18 @@ import { useRouter } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/ar";
 
+/** Sort dropdown that keeps every other active filter in the URL. */
 export function SortSelect({
   lang,
   dict,
   current,
-  category,
+  query,
 }: {
   lang: Locale;
   dict: Dictionary;
   current: string;
-  category?: string;
+  /** The current shop query string without `sort`. */
+  query: string;
 }) {
   const router = useRouter();
 
@@ -25,9 +27,8 @@ export function SortSelect({
   ];
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const params = new URLSearchParams(query);
     const sort = e.target.value;
-    const params = new URLSearchParams();
-    if (category) params.set("category", category);
     if (sort && sort !== "newest") params.set("sort", sort);
     const qs = params.toString();
     router.push(`/${lang}/shop${qs ? `?${qs}` : ""}`);
@@ -39,7 +40,7 @@ export function SortSelect({
       <select
         value={current}
         onChange={onChange}
-        className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm font-medium text-ink focus:border-brand-dark focus:outline-none"
+        className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-ink focus:border-brand-dark focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

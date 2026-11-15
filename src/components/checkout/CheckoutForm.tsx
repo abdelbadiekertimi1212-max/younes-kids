@@ -15,6 +15,7 @@ import { useCart, type CartItem } from "@/lib/cart";
 import { PHONE_RE } from "@/lib/validation";
 import { trackInitiateCheckout } from "@/lib/pixel";
 import { cn, formatPrice, interpolate } from "@/lib/utils";
+import { variantLabelFor } from "@/lib/kids";
 
 const SAVE_KEY = "yk_checkout";
 
@@ -467,7 +468,7 @@ export function CheckoutForm({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-medium text-ink">{line?.name ?? "…"}</p>
-                    {line?.variantLabel && <p className="mt-0.5 text-xs text-muted">{line.variantLabel}</p>}
+                    {line?.variantLabel && <p className="mt-0.5 text-xs text-muted">{variantLabelFor(line.variantLabel, lang)}</p>}
                     <div className="mt-1.5 flex items-center justify-between gap-2">
                       <div className="flex items-center rounded-lg border border-line bg-white">
                         <button

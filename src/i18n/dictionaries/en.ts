@@ -52,6 +52,7 @@ export const en: Dictionary = {
     description: "Description",
     delivery: "Delivery",
     bestSeller: "Best seller",
+    newArrival: "New",
     chooseSize: "Choose size",
     chooseColor: "Choose color",
     backToShop: "Back to shop",

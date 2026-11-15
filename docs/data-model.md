@@ -1,4 +1,4 @@
-# NONA — Data model
+# Younes Kids — Data model
 
 Source of truth: `supabase/migrations/*.sql`. Migrations are additive and idempotent (except the original `0001`, which can only run once). Apply with `npm run db:migrate` (tracked in `private.schema_migrations`).
 

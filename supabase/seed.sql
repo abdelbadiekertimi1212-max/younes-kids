@@ -5,7 +5,7 @@
 
 -- ---------------- Categories ----------------
 insert into public.categories (slug, name_ar, name_fr, name_en, position) values
-  ('baby',        'الرضّع (0–24 شهر)', 'Bébé (0–24 mois)', 'Baby (0–24 months)', 1),
+  ('baby',        'رضّع',              'Bébé',             'Baby',               1),
   ('girls',       'بنات',              'Filles',           'Girls',              2),
   ('boys',        'أولاد',             'Garçons',          'Boys',               3),
   ('pyjamas',     'بيجامات',           'Pyjamas',          'Pyjamas',            4),

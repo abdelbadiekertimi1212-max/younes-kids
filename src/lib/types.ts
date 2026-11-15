@@ -50,6 +50,8 @@ export type Product = {
   // 0004_commerce_core
   vendor?: string | null;
   product_type?: string | null;
+  // 0007_kids_accounts
+  gender?: "girls" | "boys" | "unisex" | null;
   tags?: string[];
   cost_price?: number | null;
   weight_grams?: number | null;

@@ -1,4 +1,4 @@
-# NONA — Testing & release
+# Younes Kids — Testing & release
 
 ## 1. Commands
 
@@ -12,22 +12,29 @@ npm run build          # next build
 
 Database tests need no Supabase project: `tests/db/harness.ts` starts an in-process Postgres 17 (PGlite), loads a Supabase stub (`anon`/`authenticated`/`service_role` roles, `auth.users`, `auth.uid()`, `storage.*`), then applies **every real migration** plus `supabase/seed.sql`.
 
-## 2. Current results (2026-10-29, this machine)
+## 2. Current results (Younes Kids, 2026-11-15)
 
-| Check | Baseline | Now |
-| --- | --- | --- |
-| Typecheck | ✅ | ✅ |
-| Lint | ❌ 15 errors, 1 warning | ✅ 0 problems |
-| Tests | none | ✅ **56 passed** (5 files) |
-| Build | ✅ 48 pages | ✅ 94 pages |
-| Migrations on live DB | — | ✅ **0003–0005 applied 2026-11-01** after a snapshot (`../db-snapshot-2026-11-01-0127-pre-migration`) and a dry run |
-| Post-migration checks on live DB | — | ✅ row counts unchanged; backfills correct; quote 2×2 300 + 250 = 4 850; confirm 20→18, cancel →20; illegal transition rejected; attribution stored (all in a rolled-back transaction); anon can't call RPCs (42501), sees 0 orders, 15 products, only approved reviews |
-| Vercel preview of `upgrade/commerce-platform` | — | ❌ failed: Preview environment has no Supabase variables (reproduced locally: build without env → `reading 'trim'`; with env → passes) |
-| Production deploy | — | ✅ **2026-11-02**: `main` fast-forwarded to `944bced`; Vercel production build succeeded |
-| Live checks on nona-one.vercel.app | — | ✅ 15 URLs return 200 (incl. `/ar/cart`, `/ar/track`, previously 404); cart priced by the DB (2 × 2 300 = 4 600); checkout + Bouira home delivery = 4 850; invalid code → "الكود غير صالح", submit disabled; `/api/track` → 204. No order or lead was created. **Admin not yet checked:** needs the owner's login (smoke test §5). |
-| Browser smoke test (read-only, live DB, before migrations) | — | ✅ partial — see below |
+| Check | Result |
+| --- | --- |
+| Typecheck | ✅ 0 errors |
+| Lint | ✅ 0 problems |
+| Tests | ✅ **78 passed** (7 files: unit + PGlite database tests) |
+| Production build | ✅ 108 pages |
+| Migrations 0001–0007 on the new Supabase project | ✅ dry run, then applied; `migrate.mjs --status` → up to date |
+| Seed | ✅ 6 kids categories, 58 wilayas (500/300 DA, south 800/500), 8 roles, settings, reasons, 4 draft content pages |
+| Owner account | ✅ username `12345678`, role owner, "change your initial password" warning on |
 
-**Smoke test performed (dev server against the live database, reads only):** Arabic homepage renders RTL with no console errors; product page renders; the variant bug D11 was found here, fixed and re-verified (4/4 colours orderable); add-to-cart updates the header badge ("السلة (1)"); the cart page shows the line and **fails safely** with a localized error because `quote_order` doesn't exist yet (server log: "Could not find the function public.quote_order"), checkout disabled; `/ar/faq`, `/ar/shipping` (58 live wilaya rows), `/fr/contact`, `/en/track` return 200; all 8 footer links return 200. **Not yet exercised:** checkout submission, tracking lookup, every admin screen. They need migrations 0003–0005.
+**End-to-end run (local dev server against the real database, 2026-11-15)**, all test data deleted afterwards:
+
+- Storefront in AR / FR / EN renders with the Younes Kids logo, colours and fonts; no console errors except product images refused by the local image optimiser (this machine's DNS64 resolves Supabase to `64:ff9b::` addresses, which Next.js treats as private). Images are served normally on Vercel.
+- Admin login with username + password; wrong password → generic error.
+- Product created in Admin → Products (gender, age size, compare-at price) and published.
+- Shop filters: 15 combinations of category, gender, age group, size, colour, price and stock all return the expected products (out-of-stock sizes excluded).
+- Product page: sizes in age order with localized labels, size guide, "new" badge in related products.
+- Cart → checkout: server quote 2 900 + 500 (wilaya 16, home) = 3 400 DA; confirmation step; order #1001 created; abandoned-checkout lead removed on order.
+- Admin: order confirmed → stock 6 → 5 with an `order_committed` inventory log.
+- My account: wrong current password refused; username change; password mismatch refused; password change keeps the session; sign-in with the new username (any case) and password; every change in the audit log.
+- Landing page: draft saved, private preview link renders with logo, price, colours and sizes.
 
 ## 3. Test inventory
 

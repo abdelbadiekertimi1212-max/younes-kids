@@ -52,6 +52,7 @@ export const ar = {
     description: "الوصف",
     delivery: "التوصيل",
     bestSeller: "الأكثر طلبًا",
+    newArrival: "جديد",
     chooseSize: "اختر المقاس",
     chooseColor: "اختر اللون",
     backToShop: "العودة إلى المتجر",
@@ -129,6 +130,7 @@ export type Dictionary = {
     description: string;
     delivery: string;
     bestSeller: string;
+    newArrival: string;
     chooseSize: string;
     chooseColor: string;
     backToShop: string;

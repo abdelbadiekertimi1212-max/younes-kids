@@ -13,6 +13,8 @@ import { saveProduct } from "@/lib/actions/products";
 import { uploadImage } from "@/lib/upload";
 import { cn, formatPrice } from "@/lib/utils";
 import { btnPrimary, btnSecondary, inputCls, labelCls } from "./ui";
+import { kidsText } from "@/i18n/kids";
+import { CLOTHING_SIZES, GENDERS, SHOE_SIZES, isGender } from "@/lib/kids";
 
 type FormVariant = {
   id?: string;
@@ -56,6 +58,7 @@ export function ProductForm({
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [tab, setTab] = useState<Locale>("ar");
+  const kt = kidsText[lang].admin;
 
   const [f, setF] = useState({
     slug: initial?.slug ?? "",
@@ -65,6 +68,7 @@ export function ProductForm({
     cost: initial?.cost_price != null ? String(initial.cost_price) : "",
     vendor: initial?.vendor ?? "",
     productType: initial?.product_type ?? "",
+    gender: initial?.gender ?? "",
     tags: (initial?.tags ?? []).join(", "),
     weight: initial?.weight_grams != null ? String(initial.weight_grams) : "",
     notes: initial?.internal_notes ?? "",
@@ -186,6 +190,7 @@ export function ProductForm({
           cost_price: cost,
           vendor: f.vendor.trim() || null,
           product_type: f.productType.trim() || null,
+          gender: isGender(f.gender) ? f.gender : null,
           tags: f.tags.split(",").map((s) => s.trim()).filter(Boolean),
           weight_grams: toNum(f.weight),
           internal_notes: f.notes.trim() || null,
@@ -312,6 +317,17 @@ export function ProductForm({
             </select>
           </label>
           <label>
+            <span className={labelCls}>{kt.gender}</span>
+            <select value={f.gender} onChange={(e) => set({ gender: e.target.value })} className={inputCls}>
+              <option value="">{kt.genderNone}</option>
+              {GENDERS.map((g) => (
+                <option key={g} value={g}>
+                  {kidsText[lang].genders[g]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
             <span className={labelCls}>{ops.products.vendor}</span>
             <input value={f.vendor} onChange={(e) => set({ vendor: e.target.value })} maxLength={80} className={inputCls} />
           </label>
@@ -414,8 +430,11 @@ export function ProductForm({
 
       {/* Variants */}
       <section className={sectionCls}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink">{t.variants}</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t.variants}</h2>
+            <p className="mt-0.5 text-xs text-muted">{kt.sizesHint}</p>
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -436,7 +455,7 @@ export function ProductForm({
             <div key={v.id ?? `new-${i}`} className="grid grid-cols-2 gap-2 rounded-xl bg-cream p-3 sm:grid-cols-6">
               <label>
                 <span className="text-xs text-muted">{t.size}</span>
-                <input value={v.size} onChange={(e) => setVariant(i, { size: e.target.value })} maxLength={20} className={inputCls} />
+                <input value={v.size} onChange={(e) => setVariant(i, { size: e.target.value })} maxLength={20} list="yk-sizes" dir="ltr" className={inputCls} />
               </label>
               <label>
                 <span className="text-xs text-muted">{t.color}</span>
@@ -524,6 +543,11 @@ export function ProductForm({
           {pending ? common.saving : ops.products.savePublish}
         </button>
       </div>
+      <datalist id="yk-sizes">
+        {[...CLOTHING_SIZES, ...SHOE_SIZES].map((sz) => (
+          <option key={sz} value={sz} />
+        ))}
+      </datalist>
     </div>
   );
 }

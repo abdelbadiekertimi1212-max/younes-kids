@@ -1,6 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
+import { isNewProduct, sortSizes, type Gender } from "@/lib/kids";
 import type {
   Category,
   DeliveryFee,
@@ -27,11 +28,18 @@ export type ProductCardData = Pick<
   | "is_featured"
   | "created_at"
   | "category_id"
-> & { images: Pick<ProductImage, "url" | "position">[] };
+> & { images: Pick<ProductImage, "url" | "position">[]; is_new?: boolean };
 
 function sortImages<T extends { images?: { position: number }[] }>(p: T): T {
   if (p.images) p.images = [...p.images].sort((a, b) => a.position - b.position);
   return p;
+}
+
+/** Card shape for the storefront: images in order, "new" flag, no filter helpers. */
+function toCard(row: ProductCardData & { filter_variants?: unknown }, now: number): ProductCardData {
+  const { filter_variants: _drop, ...card } = row;
+  void _drop;
+  return { ...sortImages(card), is_new: isNewProduct(card.created_at, now) };
 }
 
 export const getCategories = unstable_cache(
@@ -56,12 +64,31 @@ type CardQuery = {
   sort?: "newest" | "price_asc" | "price_desc" | "bestselling";
   limit?: number;
   excludeId?: string;
+  /** Kids filters (shop page). Girls/boys also include unisex items. */
+  gender?: Gender;
+  /** Any of these sizes, in stock. */
+  sizes?: string[];
+  color?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
 };
 
 export const getProductCards = unstable_cache(
   async (opts: CardQuery = {}): Promise<ProductCardData[]> => {
     const supabase = createPublicClient();
-    let q = supabase.from("products").select(CARD_FIELDS).eq("is_active", true);
+    const variantFilter = !!(opts.sizes?.length || opts.color);
+    let q = supabase
+      .from("products")
+      .select(variantFilter ? `${CARD_FIELDS}, filter_variants:product_variants!inner(size, color, stock)` : CARD_FIELDS)
+      .eq("is_active", true);
+
+    if (opts.sizes?.length) q = q.in("filter_variants.size", opts.sizes).gt("filter_variants.stock", 0);
+    if (opts.color) q = q.eq("filter_variants.color", opts.color);
+    if (opts.gender) q = opts.gender === "unisex" ? q.eq("gender", "unisex") : q.in("gender", [opts.gender, "unisex"]);
+    if (opts.minPrice != null) q = q.gte("price", opts.minPrice);
+    if (opts.maxPrice != null) q = q.lte("price", opts.maxPrice);
+    if (opts.inStock) q = q.gt("total_stock", 0);
 
     if (opts.featured) q = q.eq("is_featured", true);
     if (opts.bestSeller) q = q.eq("is_best_seller", true);
@@ -94,9 +121,10 @@ export const getProductCards = unstable_cache(
     if (opts.limit) q = q.limit(opts.limit);
 
     const { data } = await q;
-    return ((data as ProductCardData[] | null) ?? []).map(sortImages);
+    const now = Date.now();
+    return ((data as ProductCardData[] | null) ?? []).map((p) => toCard(p, now));
   },
-  ["product-cards-v2"],
+  ["product-cards-v3"],
   { revalidate: 120, tags: ["catalog"] },
 );
 
@@ -186,4 +214,40 @@ export const getDeliveryFees = unstable_cache(
   },
   ["delivery-fees-v2"],
   { revalidate: 600, tags: ["settings"] },
+);
+
+export type CatalogFacets = {
+  sizes: string[];
+  colors: { name: string; hex: string | null }[];
+  priceMin: number;
+  priceMax: number;
+};
+
+/** Sizes and colours in stock across the active catalog, plus the price range (shop filters). */
+export const getCatalogFacets = unstable_cache(
+  async (): Promise<CatalogFacets> => {
+    const supabase = createPublicClient();
+    const [{ data: variants }, { data: prices }] = await Promise.all([
+      supabase
+        .from("product_variants")
+        .select("size, color, color_hex, product:products!inner(is_active)")
+        .eq("product.is_active", true)
+        .eq("is_active", true)
+        .gt("stock", 0)
+        .limit(5000),
+      supabase.from("products").select("price").eq("is_active", true).limit(5000),
+    ]);
+    const rows = (variants as { size: string | null; color: string | null; color_hex: string | null }[] | null) ?? [];
+    const colors = new Map<string, string | null>();
+    for (const v of rows) if (v.color && !colors.has(v.color)) colors.set(v.color, v.color_hex);
+    const list = ((prices as { price: number }[] | null) ?? []).map((p) => Number(p.price));
+    return {
+      sizes: sortSizes(rows.map((v) => v.size).filter((x): x is string => !!x)),
+      colors: [...colors].map(([name, hex]) => ({ name, hex })),
+      priceMin: list.length ? Math.min(...list) : 0,
+      priceMax: list.length ? Math.max(...list) : 0,
+    };
+  },
+  ["catalog-facets-v1"],
+  { revalidate: 300, tags: ["catalog"] },
 );

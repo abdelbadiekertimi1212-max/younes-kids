@@ -76,6 +76,7 @@ export async function saveProduct(input: ProductInput, lang: string): Promise<Sa
     cost_price: d.cost_price ?? null,
     vendor: d.vendor ?? null,
     product_type: d.product_type ?? null,
+    gender: d.gender ?? null,
     tags: [...new Set(d.tags)],
     weight_grams: d.weight_grams ?? null,
     internal_notes: d.internal_notes ?? null,

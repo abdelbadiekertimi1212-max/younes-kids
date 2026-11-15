@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { getStaff } from "@/lib/auth";
 import { audit } from "@/lib/audit";
@@ -13,18 +14,21 @@ import { isLocale } from "@/i18n/config";
 export type AccountError = "invalid" | "wrongPassword" | "taken" | "rate" | "mismatch" | "same" | "failed";
 export type AccountResult = { ok: true } | { ok: false; error: AccountError };
 
-/** Checks a staff member's current password without touching their own session. */
-async function verifyPassword(userId: string, password: string): Promise<boolean> {
+/**
+ * Checks a staff member's current password without touching their own
+ * session. Returns the account email when the password is right, else null.
+ */
+async function verifyPassword(userId: string, password: string): Promise<string | null> {
   const { data } = await createAdminClient().auth.admin.getUserById(userId);
   const email = data.user?.email;
-  if (!email) return false;
+  if (!email) return null;
   const probe = createSupabaseClient(supabaseUrl(), supabaseAnonKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: signed, error } = await probe.auth.signInWithPassword({ email, password });
-  if (error || !signed.session) return false;
+  if (error || !signed.session) return null;
   await probe.auth.signOut({ scope: "local" }); // revoke only the probe session
-  return true;
+  return email;
 }
 
 function refresh(lang: string) {
@@ -64,7 +68,8 @@ export async function changePassword(input: unknown, lang: string): Promise<Acco
     return { ok: false, error: msg === "mismatch" ? "mismatch" : msg === "same" ? "same" : "invalid" };
   }
   if (!(await rateLimit(`account:${staff.id}`, 10, 900))) return { ok: false, error: "rate" };
-  if (!(await verifyPassword(staff.id, parsed.data.currentPassword))) {
+  const email = await verifyPassword(staff.id, parsed.data.currentPassword);
+  if (!email) {
     await audit(staff, "account.password", "admin", staff.id, {}, "failure");
     return { ok: false, error: "wrongPassword" };
   }
@@ -73,6 +78,9 @@ export async function changePassword(input: unknown, lang: string): Promise<Acco
   const { error } = await admin.auth.admin.updateUserById(staff.id, { password: parsed.data.newPassword });
   if (error) return { ok: false, error: "failed" };
   await admin.from("admins").update({ must_change_password: false }).eq("id", staff.id);
+
+  // A password change ends existing sessions; sign this browser back in with the new one.
+  await (await createServerClient()).auth.signInWithPassword({ email, password: parsed.data.newPassword });
 
   await audit(staff, "account.password", "admin", staff.id);
   refresh(lang);

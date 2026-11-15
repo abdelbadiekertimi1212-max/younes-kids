@@ -15,6 +15,8 @@ import { SITE_URL } from "@/lib/site";
 import { pickLocale } from "@/lib/utils";
 import type { ProductDetailFields } from "@/lib/types";
 import { BRAND } from "@/lib/brand";
+import { kidsText } from "@/i18n/kids";
+import { SIZE_GUIDE, sizeLabel } from "@/lib/kids";
 
 export async function generateMetadata({
   params,
@@ -77,6 +79,9 @@ export default async function ProductPage({
   ).filter(([k]) => details[k]);
 
   const activeVariants = product.variants.filter((v) => v.is_active);
+  const kt = kidsText[lang];
+  const productSizes = new Set(activeVariants.map((v) => v.size?.trim().toUpperCase()).filter(Boolean));
+  const guideRows = SIZE_GUIDE.filter((r) => productSizes.has(r.size));
   const prices = activeVariants.map((v) => v.price_override ?? product.price);
   const jsonLd = {
     "@context": "https://schema.org",
@@ -166,6 +171,34 @@ export default async function ProductPage({
           <details className="mt-4 rounded-xl border border-line p-3 text-sm">
             <summary className="cursor-pointer font-semibold text-ink">{st.product.sizeGuide}</summary>
             <p className="mt-2 whitespace-pre-line text-muted">{details.size_guide}</p>
+          </details>
+        )}
+
+        {guideRows.length > 0 && (
+          <details className="mt-4 rounded-2xl border border-line bg-sky-light/40 p-3 text-sm">
+            <summary className="cursor-pointer font-bold text-ink">📏 {kt.sizeGuideTitle}</summary>
+            <p className="mt-2 text-muted">{kt.sizeGuideIntro}</p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-start text-sm">
+                <thead>
+                  <tr className="text-muted">
+                    <th className="py-1.5 text-start font-semibold">{kt.sizeGuideSize}</th>
+                    <th className="py-1.5 text-start font-semibold">{kt.sizeGuideAge}</th>
+                    <th className="py-1.5 text-start font-semibold">{kt.sizeGuideHeight}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {guideRows.map((r) => (
+                    <tr key={r.size}>
+                      <td className="py-1.5 font-semibold text-ink" dir="ltr">{r.size}</td>
+                      <td className="py-1.5 text-ink">{sizeLabel(r.size, lang)}</td>
+                      <td className="py-1.5 text-ink" dir="ltr">{r.height}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-muted">{kt.sizeGuideNote}</p>
           </details>
         )}
       </ProductView>

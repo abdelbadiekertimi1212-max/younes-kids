@@ -9,6 +9,7 @@ import type { StoreText } from "@/i18n/store";
 import { quoteCart, type Quote } from "@/lib/actions/orders";
 import { useCart } from "@/lib/cart";
 import { cn, formatPrice, interpolate } from "@/lib/utils";
+import { variantLabelFor } from "@/lib/kids";
 
 type State = { key: string; quote: Quote | null; error: string | null; variantId?: string; available?: number };
 
@@ -87,7 +88,7 @@ export function CartView({
                 <p className="line-clamp-2 text-sm font-medium text-ink">
                   {line?.name ?? (loading ? "…" : "—")}
                 </p>
-                {line?.variantLabel && <p className="mt-0.5 text-xs text-muted">{line.variantLabel}</p>}
+                {line?.variantLabel && <p className="mt-0.5 text-xs text-muted">{variantLabelFor(line.variantLabel, lang)}</p>}
                 {line && <p className="mt-1 text-sm font-semibold text-ink">{formatPrice(line.unitPrice)} {currency}</p>}
                 {bad && (
                   <p className="mt-1 text-xs text-red-600" role="alert">
