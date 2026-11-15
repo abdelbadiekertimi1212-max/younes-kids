@@ -8,6 +8,7 @@ import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { pickLocale } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { adminAccountText } from "@/i18n/admin-account";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -36,7 +37,9 @@ export default async function AdminPanelLayout({
       ops={adminOpsText[lang].nav}
       live={adminOpsText[lang].live}
       builder={adminBuilderText[lang].nav}
-      adminName={staff.fullName ?? staff.email ?? ""}
+      account={adminAccountText[lang]}
+      mustChangePassword={staff.mustChangePassword}
+      adminName={staff.fullName ?? staff.username ?? staff.email ?? ""}
       roleLabel={role ? pickLocale(role, "name", lang) : staff.roleKey}
       permissions={staff.permissions}
     >

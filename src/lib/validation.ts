@@ -403,3 +403,29 @@ export const roleInputSchema = z.object({
   name_en: nullableStr(60),
   permissions: z.array(z.enum(PERMISSIONS)).max(PERMISSIONS.length),
 });
+
+// ── Staff accounts (username login, own credentials) ─────
+export const USERNAME_RE = /^[a-z0-9._-]{3,32}$/;
+/** Usernames are case-insensitive: stored and compared in lowercase. */
+export const normalizeUsername = (v: string) => v.trim().toLowerCase();
+export const usernameSchema = z.string().max(64).transform(normalizeUsername).pipe(z.string().regex(USERNAME_RE));
+export const newPasswordSchema = z.string().min(8).max(72);
+
+export const loginSchema = z.object({
+  identifier: z.string().trim().min(1).max(254),
+  password: z.string().min(1).max(72),
+});
+
+export const changeUsernameSchema = z.object({
+  username: usernameSchema,
+  currentPassword: z.string().min(1).max(72),
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(72),
+    newPassword: newPasswordSchema,
+    confirm: z.string().max(72),
+  })
+  .refine((v) => v.newPassword === v.confirm, { path: ["confirm"], message: "mismatch" })
+  .refine((v) => v.newPassword !== v.currentPassword, { path: ["newPassword"], message: "same" });

@@ -9,6 +9,7 @@ import {
   Boxes,
   FileText,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   LayoutTemplate,
   ListX,
@@ -26,6 +27,8 @@ import {
   ShoppingBag,
   Star,
   Store,
+  TriangleAlert,
+  UserRound,
   Users,
   X,
   type LucideIcon,
@@ -34,6 +37,7 @@ import type { Locale } from "@/i18n/config";
 import type { AdminText } from "@/i18n/admin";
 import type { AdminOpsText } from "@/i18n/admin-ops";
 import type { AdminBuilderText } from "@/i18n/admin-builder";
+import type { AdminAccountText } from "@/i18n/admin-account";
 import { can, type Permission } from "@/lib/permissions";
 import { signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -149,18 +153,34 @@ function NavLinks({
 function SidebarFooter({
   lang,
   nav,
+  accountLabel,
   adminName,
   roleLabel,
   collapsed,
+  onNavigate,
 }: {
   lang: Locale;
   nav: AdminText["nav"];
+  accountLabel: string;
   adminName: string;
   roleLabel: string;
   collapsed?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <div className="mt-auto space-y-1 border-t border-line pt-3">
+      <Link
+        href={`/${lang}/admin/account`}
+        onClick={onNavigate}
+        title={collapsed ? accountLabel : undefined}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-cream",
+          collapsed && "justify-center px-0",
+        )}
+      >
+        <UserRound className="size-5" aria-hidden />
+        {!collapsed && accountLabel}
+      </Link>
       <Link
         href={`/${lang}`}
         title={collapsed ? nav.viewStore : undefined}
@@ -201,6 +221,8 @@ export function AdminShell({
   ops,
   live,
   builder,
+  account,
+  mustChangePassword,
   adminName,
   roleLabel,
   permissions,
@@ -211,6 +233,8 @@ export function AdminShell({
   ops: AdminOpsText["nav"];
   live: AdminOpsText["live"];
   builder: AdminBuilderText["nav"];
+  account: AdminAccountText;
+  mustChangePassword: boolean;
   adminName: string;
   roleLabel: string;
   permissions: string[];
@@ -259,7 +283,7 @@ export function AdminShell({
             </button>
           </div>
           <NavLinks groups={groups} pathname={pathname} collapsed={collapsed} />
-          <SidebarFooter lang={lang} nav={nav} adminName={adminName} roleLabel={roleLabel} collapsed={collapsed} />
+          <SidebarFooter lang={lang} nav={nav} accountLabel={account.nav} adminName={adminName} roleLabel={roleLabel} collapsed={collapsed} />
         </div>
       </aside>
 
@@ -301,12 +325,24 @@ export function AdminShell({
               </button>
             </div>
             <NavLinks groups={groups} pathname={pathname} onNavigate={() => setOpen(false)} />
-            <SidebarFooter lang={lang} nav={nav} adminName={adminName} roleLabel={roleLabel} />
+            <SidebarFooter lang={lang} nav={nav} accountLabel={account.nav} adminName={adminName} roleLabel={roleLabel} onNavigate={() => setOpen(false)} />
           </div>
         </div>
       )}
 
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        {mustChangePassword && !pathname.endsWith("/admin/account") && (
+          <div role="alert" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <TriangleAlert className="size-5 shrink-0" aria-hidden />
+            <span className="flex-1 font-medium">{account.warning}</span>
+            <Link href={`${base}/account`} className="inline-flex items-center gap-1.5 rounded-full bg-amber-900 px-4 py-1.5 text-xs font-bold text-white">
+              <KeyRound className="size-3.5" aria-hidden />
+              {account.warningCta}
+            </Link>
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

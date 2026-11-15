@@ -15,6 +15,9 @@ export async function getSessionUser() {
 export type Staff = {
   id: string;
   email: string | null;
+  username: string | null;
+  /** True until the account's initial password has been changed. */
+  mustChangePassword: boolean;
   fullName: string | null;
   roleKey: string;
   permissions: string[];
@@ -32,7 +35,7 @@ export const getStaff = cache(async (): Promise<Staff | null> => {
 
   const { data } = await supabase
     .from("admins")
-    .select("id, email, full_name, role_key, is_active, role:staff_roles(permissions)")
+    .select("id, email, username, must_change_password, full_name, role_key, is_active, role:staff_roles(permissions)")
     .eq("id", userData.user.id)
     .eq("is_active", true)
     .maybeSingle();
@@ -41,6 +44,8 @@ export const getStaff = cache(async (): Promise<Staff | null> => {
   const row = data as {
     id: string;
     email: string | null;
+    username: string | null;
+    must_change_password: boolean | null;
     full_name: string | null;
     role_key: string;
     role: { permissions: string[] } | { permissions: string[] }[] | null;
@@ -49,6 +54,8 @@ export const getStaff = cache(async (): Promise<Staff | null> => {
   return {
     id: row.id,
     email: row.email,
+    username: row.username,
+    mustChangePassword: row.must_change_password === true,
     fullName: row.full_name,
     roleKey: row.role_key,
     permissions: role?.permissions ?? [],

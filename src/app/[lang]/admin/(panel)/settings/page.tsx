@@ -11,12 +11,16 @@ import { SettingsForm } from "@/components/admin/SettingsForm";
 import { DeliveryFeesEditor } from "@/components/admin/DeliveryFeesEditor";
 import { MarketingForm } from "@/components/admin/MarketingForm";
 import { NoAccess, PageHeader } from "@/components/admin/ui";
+import Link from "next/link";
+import { KeyRound } from "lucide-react";
+import { adminAccountText } from "@/i18n/admin-account";
 
 export default async function AdminSettingsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const t = adminText[lang];
   const ops = adminOpsText[lang];
+  const acct = adminAccountText[lang];
   const staff = await requireStaff(lang);
   const canSettings = can(staff.permissions, "settings.manage");
   const canMarketing = can(staff.permissions, "marketing.manage");
@@ -32,6 +36,18 @@ export default async function AdminSettingsPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-5">
       <PageHeader title={t.settings.title} />
+      <Link
+        href={`/${lang}/admin/account`}
+        className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 transition-colors hover:bg-brand-light"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-light text-brand-dark">
+          <KeyRound className="size-5" aria-hidden />
+        </span>
+        <span>
+          <span className="block text-sm font-semibold text-ink">{acct.settingsCard}</span>
+          <span className="block text-sm text-muted">{acct.settingsCardHelp}</span>
+        </span>
+      </Link>
       {canSettings && (
         <SettingsForm lang={lang} t={t.settings} common={t.common} initialStore={settings.store} initialSocial={settings.social} />
       )}

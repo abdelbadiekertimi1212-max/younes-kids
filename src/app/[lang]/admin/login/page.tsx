@@ -4,6 +4,7 @@ import { adminText } from "@/i18n/admin";
 import { getAdmin } from "@/lib/auth";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { Logo } from "@/components/brand/Logo";
+import { adminAccountText } from "@/i18n/admin-account";
 
 export default async function AdminLoginPage({
   params,
@@ -26,7 +27,7 @@ export default async function AdminLoginPage({
           <h1 className="mt-2 text-lg font-semibold text-ink">{t.title}</h1>
           <p className="mt-1 text-sm text-muted">{t.subtitle}</p>
         </div>
-        <LoginForm lang={lang} t={t} />
+        <LoginForm lang={lang} t={t} acct={adminAccountText[lang].login} />
       </div>
     </div>
   );

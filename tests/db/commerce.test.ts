@@ -616,6 +616,30 @@ describe("row level security", () => {
     });
   });
 
+  it("usernames are unique, lowercase-only, and staff rows stay private", async () => {
+    await db.query("update admins set username = 'owner.yk' where id = $1", [ids.admin]);
+    await expect(db.query("update admins set username = 'owner.yk' where id = $1", [ids.manager])).rejects.toThrow(/admins_username_key/);
+    await expect(db.query("update admins set username = 'Owner' where id = $1", [ids.manager])).rejects.toThrow(/admins_username_format/);
+    await expect(db.query("update admins set username = 'ab' where id = $1", [ids.manager])).rejects.toThrow(/admins_username_format/);
+    await db.query("update admins set username = '12345678', must_change_password = true where id = $1", [ids.manager]);
+    await asRole(db, "anon", null, async () => {
+      expect((await db.query("select username from admins")).rows).toHaveLength(0);
+    });
+    await asRole(db, "authenticated", ids.customer, async () => {
+      expect((await db.query("select username from admins")).rows).toHaveLength(0);
+    });
+  });
+
+  it("products.gender accepts only girls / boys / unisex", async () => {
+    await db.query("update products set gender = 'girls' where slug = 'robe-princesse'");
+    await db.query("update products set gender = null where slug = 'tshirt-dino'");
+    await expect(db.query("update products set gender = 'women' where slug = 'tshirt-dino'")).rejects.toThrow(/products_gender_check/);
+    await asRole(db, "anon", null, async () => {
+      const r = await db.query<{ slug: string }>("select slug from products where gender = 'girls'");
+      expect(r.rows.map((x) => x.slug)).toEqual(["robe-princesse"]);
+    });
+  });
+
   it("legacy inserts that only set `role` still get a role_key", async () => {
     const u = await createUser(db, "legacy@test.dz");
     await db.query("insert into admins (id, email, role) values ($1, 'legacy@test.dz', 'admin')", [u]);
